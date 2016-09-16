@@ -1,11 +1,15 @@
 package net.keabotstudios.superserial;
 
+import java.nio.ByteBuffer;
+
 import net.keabotstudios.superserial.Type.DataType;
 
 public class Serialization {
 	
 	public static final byte[] HEADER = "SS".getBytes();
 	public static final short VERSION = 0x0100;
+	
+	// WRITING ==================================================================================
 	
 	public static int write(byte[] dest, int pointer, byte value) {
 		assert(dest.length >= pointer + DataType.BYTE.getSize());
@@ -129,6 +133,8 @@ public class Serialization {
 		return pointer;
 	}
 	
+	// READING ==================================================================================
+	
 	public static byte readByte(byte[] src, int pointer) {
 		assert(src.length >= pointer + DataType.BYTE.getSize());
 		return src[pointer];
@@ -136,23 +142,22 @@ public class Serialization {
 	
 	public static short readShort(byte[] src, int pointer) {
 		assert(src.length >= pointer + DataType.SHORT.getSize());
-		return (short) (src[pointer] << 8 | src[pointer + 1] << 0);
+		return ByteBuffer.wrap(src, pointer, DataType.SHORT.getSize()).getShort();
 	}
 	
 	public static char readChar(byte[] src, int pointer) {
 		assert(src.length >= pointer + DataType.CHARACTER.getSize());
-		return (char) (src[pointer] << 8 | src[pointer + 1] << 0);
+		return ByteBuffer.wrap(src, pointer, DataType.CHARACTER.getSize()).getChar();
 	}
 	
 	public static int readInt(byte[] src, int pointer) {
 		assert(src.length >= pointer + DataType.INTEGER.getSize());
-		return (int) ((src[pointer] << 24) | (src[pointer + 1] << 16) | (src[pointer + 2] << 8) | (src[pointer + 3] << 0));
+		return ByteBuffer.wrap(src, pointer, DataType.INTEGER.getSize()).getInt();
 	}
 	
 	public static long readLong(byte[] src, int pointer) {
 		assert(src.length >= pointer + DataType.LONG.getSize());
-		return (long) ((src[pointer] << 56) | (src[pointer + 1] << 48) | (src[pointer + 2] << 40) | (src[pointer + 3] << 32) |
-						(src[pointer + 4] << 24) | (src[pointer + 5] << 16) | (src[pointer + 6] << 8) | (src[pointer + 7] << 0));
+		return ByteBuffer.wrap(src, pointer, DataType.LONG.getSize()).getLong();
 	}
 	
 	public static float readFloat(byte[] src, int pointer) {
@@ -169,6 +174,11 @@ public class Serialization {
 		assert(src.length >= pointer + DataType.BOOLEAN.getSize());
 		assert(src[pointer] == 0 || src[pointer] == 1);
 		return src[pointer] != 0;
+	}
+	
+	public static String readString(byte[] src, int pointer, int length) {
+		assert(src.length >= pointer + length);
+		return new String(src, pointer, length);
 	}
 
 }

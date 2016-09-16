@@ -4,8 +4,10 @@ public class Type {
 	public static enum ContainerType {
 		UNKNOWN((byte) 0),
 		FIELD((byte) 1),
-		ARRAY((byte) 2),
-		OBJECT((byte) 3);
+		STRING((byte) 3),
+		ARRAY((byte) 4),
+		OBJECT((byte) 5),
+		DATABASE((byte) 6);
 		
 		private final byte type;
 		
