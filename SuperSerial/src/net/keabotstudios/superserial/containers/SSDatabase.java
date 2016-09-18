@@ -1,60 +1,46 @@
 package net.keabotstudios.superserial.containers;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import net.keabotstudios.superserial.Serialization;
-import net.keabotstudios.superserial.Type.ContainerType;
-import net.keabotstudios.superserial.Type.DataType;
+import net.keabotstudios.superserial.SSSerialization;
+import net.keabotstudios.superserial.SSType.SSContainerType;
+import net.keabotstudios.superserial.SSType.SSDataType;
 
-public class SSDatabase {
+public class SSDatabase extends SSContainer {
 
 	public static final byte[] HEADER = "SSDB".getBytes();
-	public static final ContainerType CONTAINER_TYPE = ContainerType.DATABASE;
-	private short nameLength;
-	private byte[] name;
-	private int size = DataType.BYTE.getSize() + (DataType.SHORT.getSize() * 2) + DataType.INTEGER.getSize() + HEADER.length;
+	public static final short VERSION = 0x0010;
 	private short objectCount;
 	public List<SSObject> objects = new ArrayList<SSObject>();
-	
-	private final int sizeOffset = 1 + 2 + 4;
 
-	private SSDatabase() {}
+	private SSDatabase() {
+		super(SSContainerType.DATABASE);
+		this.size += (SSDataType.SHORT.getSize() * 2) + HEADER.length;
+	}
 
 	public SSDatabase(String name) {
+		this();
 		setName(name);
 	}
 
-	public void setName(String name) {
-		assert (name.length() < Short.MAX_VALUE);
-		if (this.name != null)
-			size -= this.name.length;
-		this.name = name.getBytes();
-		this.nameLength = (short) this.name.length;
-		size += this.name.length;
-	}
-
-	public String getName() {
-		return new String(name);
-	}
-
 	public int writeBytes(byte[] dest, int pointer) {
-		pointer = Serialization.write(dest, pointer, HEADER);
-		pointer = Serialization.write(dest, pointer, CONTAINER_TYPE.getType());
-		pointer = Serialization.write(dest, pointer, nameLength);
-		pointer = Serialization.write(dest, pointer, name);
-		pointer = Serialization.write(dest, pointer, size);
-
-		pointer = Serialization.write(dest, pointer, objectCount);
+		pointer = SSSerialization.write(dest, pointer, HEADER);
+		pointer = SSSerialization.write(dest, pointer, VERSION);
+		pointer = SSSerialization.write(dest, pointer, containerType.getType());
+		pointer = SSSerialization.write(dest, pointer, nameLength);
+		pointer = SSSerialization.write(dest, pointer, name);
+		pointer = SSSerialization.write(dest, pointer, size);
+		
+		pointer = SSSerialization.write(dest, pointer, objectCount);
 		for (SSObject object : objects) {
 			pointer = object.writeBytes(dest, pointer);
 		}
 		return pointer;
-	}
-
-	public int getSize() {
-		return size;
 	}
 
 	public void addObject(SSObject object) {
@@ -65,29 +51,49 @@ public class SSDatabase {
 
 	public static SSDatabase Deserialize(byte[] data) {
 		int pointer = 0;
-		SSDatabase result;
-
-		String header = Serialization.readString(data, pointer, 4);
+		SSDatabase result = new SSDatabase();
+		byte[] header = new byte[HEADER.length];
+		SSSerialization.readBytes(data, pointer, header);
 		pointer += HEADER.length;
-		byte containerType = Serialization.readByte(data, pointer);
-		pointer += DataType.BYTE.getSize();
-		assert (Arrays.equals(header.getBytes(), HEADER) && containerType == CONTAINER_TYPE.getType());
-
-		result = new SSDatabase();
-		result.nameLength = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		result.setName(Serialization.readString(data, pointer, result.nameLength));
+		if(!Arrays.equals(header, HEADER)) {
+			System.err.println("[ERROR]Invalid data type!");
+			return null;
+		}
+		short version = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		if(version != VERSION) {
+			System.err.println("[ERROR]Invalid SSDatabase version! Read: " + version + ", Expected: " + VERSION);
+			return null;
+		}
+		byte containerType = SSSerialization.readByte(data, pointer);
+		pointer += SSDataType.BYTE.getSize();	
+		assert(containerType == result.containerType.getType());
+		result.nameLength = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		result.setName(SSSerialization.readString(data, pointer, result.nameLength));
 		pointer += result.nameLength;
-		result.size = Serialization.readInt(data, pointer);
-		pointer += DataType.INTEGER.getSize();
-		
-		result.objectCount = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		
-		int[] pointerRef = new int[] { pointer };
+		result.size = SSSerialization.readInteger(data, pointer);
+		pointer += SSDataType.INTEGER.getSize();
+		result.objectCount = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
 		for(int i = 0; i < result.objectCount; i++) {
-			result.objects.add(SSObject.Deserialize(data, pointerRef));
+			SSObject object = SSObject.Deserialize(data, pointer);
+			result.objects.add(object);
+			pointer += object.getSize();
 		}
 		return result;
+	}
+	
+	public boolean serializeToFile(String path, ClassLoader loader) {
+		byte[] data = new byte[getSize()];
+		writeBytes(data, 0);
+		try {
+			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(path));
+			stream.write(data);
+			stream.close();
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
 	}
 }
