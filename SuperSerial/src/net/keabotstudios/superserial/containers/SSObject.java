@@ -3,61 +3,89 @@ package net.keabotstudios.superserial.containers;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.keabotstudios.superserial.Serialization;
-import net.keabotstudios.superserial.Type.ContainerType;
-import net.keabotstudios.superserial.Type.DataType;
+import net.keabotstudios.superserial.SSSerialization;
+import net.keabotstudios.superserial.SSType.SSContainerType;
+import net.keabotstudios.superserial.SSType.SSDataType;
 
-public class SSObject {
+public class SSObject extends SSContainer {
 	
-	public static final ContainerType CONTAINER_TYPE = ContainerType.OBJECT;
-	private short nameLength;
-	private byte[] name;
-	private int size = DataType.BYTE.getSize() + (DataType.SHORT.getSize() * 4) + DataType.INTEGER.getSize();
 	private short fieldCount;
 	private List<SSField> fields = new ArrayList<SSField>();
 	private short stringCount;
 	private List<SSString> strings = new ArrayList<SSString>();
 	private short arrayCount;
 	private List<SSArray> arrays = new ArrayList<SSArray>();
+	private short objectCount;
+	private List<SSObject> objects = new ArrayList<SSObject>();
 	
-	private SSObject() {}
+	private SSObject() {
+		super(SSContainerType.OBJECT);
+		this.size += SSDataType.SHORT.getSize() * 4;
+	}
 	
 	public SSObject(String name) {
+		this();
 		setName(name);
 	}
-	
-	public void setName(String name) {
-		assert(name.length() < Short.MAX_VALUE);
-		if(this.name != null)
-			size -= this.name.length;
-		this.name = name.getBytes();
-		this.nameLength = (short) this.name.length;
-		size += this.name.length;
+
+	public List<SSField> getFields() {
+		return fields;
+	}
+
+	public List<SSString> getStrings() {
+		return strings;
+	}
+
+	public List<SSArray> getArrays() {
+		return arrays;
 	}
 	
-	public String getName() {
-		return new String(name);
+	public List<SSObject> getObjects() {
+		return objects;
+	}
+	
+	public SSField getField(String name) {
+		for (SSField field : fields)
+			if(field.getName().equals(name)) return field;
+		return null;
+	}
+	
+	public SSArray getArray(String name) {
+		for (SSArray array : arrays)
+			if(array.getName().equals(name)) return array;
+		return null;
+	}
+	
+	public SSString getString(String name) {
+		for (SSString string : strings)
+			if(string.getName().equals(name)) return string;
+		return null;
+	}
+
+	public SSObject getObject(String name) {
+		for (SSObject object : objects)
+			if(object.getName().equals(name)) return object;
+		return null;
 	}
 
 	public int writeBytes(byte[] dest, int pointer) {
-		pointer = Serialization.write(dest, pointer, CONTAINER_TYPE.getType());
-		pointer = Serialization.write(dest, pointer, nameLength);
-		pointer = Serialization.write(dest, pointer, name);
-		pointer = Serialization.write(dest, pointer, size);
-		pointer = Serialization.write(dest, pointer, fieldCount);
+		pointer = SSSerialization.write(dest, pointer, containerType.getType());
+		pointer = SSSerialization.write(dest, pointer, nameLength);
+		pointer = SSSerialization.write(dest, pointer, name);
+		pointer = SSSerialization.write(dest, pointer, size);
+		pointer = SSSerialization.write(dest, pointer, fieldCount);
 		for(SSField field : fields)
 			pointer = field.writeBytes(dest, pointer);
-		pointer = Serialization.write(dest, pointer, stringCount);
+		pointer = SSSerialization.write(dest, pointer, stringCount);
 		for(SSString string : strings)
 			pointer = string.writeBytes(dest, pointer);
-		pointer = Serialization.write(dest, pointer, arrayCount);
+		pointer = SSSerialization.write(dest, pointer, arrayCount);
 		for(SSArray array : arrays)
 			pointer = array.writeBytes(dest, pointer);
+		pointer = SSSerialization.write(dest, pointer, objectCount);
+		for(SSObject object : objects)
+			pointer = object.writeBytes(dest, pointer);
 		return pointer;
-	}
-
-	public int getSize() {
-		return size;
 	}
 
 	public void addField(SSField field) {
@@ -78,28 +106,45 @@ public class SSObject {
 		arrayCount = (short) arrays.size();
 	}
 	
-	public static SSObject Deserialize(byte[] data, int[] pointerRef) {
-		int pointer = pointerRef[0];
-		SSObject result;
-		byte containerType = Serialization.readByte(data, pointer);
-		assert(containerType == CONTAINER_TYPE.getType());
-		result = new SSObject();
-		result.nameLength = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		result.setName(Serialization.readString(data, pointer, result.nameLength));
+	public static SSObject Deserialize(byte[] data, int pointer) {
+		SSObject result = new SSObject();
+		byte containerType = SSSerialization.readByte(data, pointer);
+		pointer += SSDataType.BYTE.getSize();
+		assert(containerType == result.containerType.getType());
+		result.nameLength = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		result.setName(SSSerialization.readString(data, pointer, result.nameLength));
 		pointer += result.nameLength;
-		result.size = Serialization.readInt(data, pointer);
-		pointer += DataType.INTEGER.getSize();
-		result.fieldCount = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		// fields
-		result.stringCount = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		// strings
-		result.arrayCount = Serialization.readShort(data, pointer);
-		pointer += DataType.SHORT.getSize();
-		// arrays
-		pointerRef[0] = pointer;
+		result.size = SSSerialization.readInteger(data, pointer);
+		pointer += SSDataType.INTEGER.getSize();
+		result.fieldCount = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		for(int i = 0; i < result.fieldCount; i++) {
+			SSField field = SSField.Deserialize(data, pointer);
+			result.fields.add(field);
+			pointer += field.getSize();
+		}
+		result.stringCount = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		for(int i = 0; i < result.stringCount; i++) {
+			SSString string = SSString.Deserialize(data, pointer);
+			result.strings.add(string);
+			pointer += string.getSize();
+		}
+		result.arrayCount = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		for(int i = 0; i < result.arrayCount; i++) {
+			SSArray array = SSArray.Deserialize(data, pointer);
+			result.arrays.add(array);
+			pointer += array.getSize();
+		}
+		result.objectCount = SSSerialization.readShort(data, pointer);
+		pointer += SSDataType.SHORT.getSize();
+		for(int i = 0; i < result.objectCount; i++) {
+			SSObject object = SSObject.Deserialize(data, pointer);
+			result.objects.add(object);
+			pointer += object.getSize();
+		}
 		return result;
 	}
 

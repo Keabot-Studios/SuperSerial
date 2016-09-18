@@ -1,7 +1,7 @@
 package net.keabotstudios.superserial;
 
-public class Type {
-	public static enum ContainerType {
+public class SSType {
+	public static enum SSContainerType {
 		UNKNOWN((byte) 0),
 		FIELD((byte) 1),
 		STRING((byte) 3),
@@ -11,7 +11,7 @@ public class Type {
 		
 		private final byte type;
 		
-		private ContainerType(byte type) {
+		private SSContainerType(byte type) {
 			this.type = type;
 		}
 		
@@ -19,8 +19,8 @@ public class Type {
 			return type;
 		}
 		
-		public static ContainerType getTypeFromByte(byte b) {
-			for(ContainerType ct : ContainerType.values()) {
+		public static SSContainerType getTypeFromByte(byte b) {
+			for(SSContainerType ct : SSContainerType.values()) {
 				if(ct.getType() == b) {
 					return ct;
 				}
@@ -29,7 +29,7 @@ public class Type {
 		}
 	}
 	
-	public static enum DataType {
+	public static enum SSDataType {
 		UNKNOWN((byte) 0, 0),
 		BYTE((byte) 1, Byte.BYTES),
 		SHORT((byte) 2, Short.BYTES),
@@ -43,7 +43,7 @@ public class Type {
 		private final byte type;
 		private final int size;
 		
-		private DataType(byte type, int size) {
+		private SSDataType(byte type, int size) {
 			this.type = type;
 			this.size = size;
 		}
@@ -58,8 +58,8 @@ public class Type {
 			return size;
 		}
 		
-		public static DataType getTypeFromByte(byte b) {
-			for(DataType ct : DataType.values()) {
+		public static SSDataType getTypeFromByte(byte b) {
+			for(SSDataType ct : SSDataType.values()) {
 				if(ct.getType() == b) {
 					return ct;
 				}
