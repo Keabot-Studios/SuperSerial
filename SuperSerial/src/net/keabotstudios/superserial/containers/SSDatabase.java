@@ -50,7 +50,7 @@ public class SSDatabase extends SSContainer {
 	public SSObject getObject(String name) {
 		for (SSObject object : objects)
 			if(object.getName().equals(name)) return object;
-		System.err.println("[ERROR]Object does not exist: " + name);
+		System.err.println("Object does not exist: " + name);
 		return null;
 	}
 

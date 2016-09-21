@@ -47,24 +47,28 @@ public class SSObject extends SSContainer {
 	public SSField getField(String name) {
 		for (SSField field : fields)
 			if(field.getName().equals(name)) return field;
+		System.err.println("Field does not exist: " + name);
 		return null;
 	}
 	
 	public SSArray getArray(String name) {
 		for (SSArray array : arrays)
 			if(array.getName().equals(name)) return array;
+		System.err.println("Array does not exist: " + name);
 		return null;
 	}
 	
 	public SSString getString(String name) {
 		for (SSString string : strings)
 			if(string.getName().equals(name)) return string;
+		System.err.println("String does not exist: " + name);
 		return null;
 	}
 
 	public SSObject getObject(String name) {
 		for (SSObject object : objects)
 			if(object.getName().equals(name)) return object;
+		System.err.println("Object does not exist: " + name);
 		return null;
 	}
 
@@ -133,7 +137,7 @@ public class SSObject extends SSContainer {
 		}
 		objects.add(object);
 		size += object.getSize();
-		objectCount = (short) arrays.size();
+		objectCount = (short) objects.size();
 	}
 	
 	public static SSObject Deserialize(byte[] data, int pointer) {
