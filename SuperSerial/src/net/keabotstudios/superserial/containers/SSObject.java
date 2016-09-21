@@ -89,21 +89,51 @@ public class SSObject extends SSContainer {
 	}
 
 	public void addField(SSField field) {
+		for(int i = 0; i < fields.size(); i++) {
+			if(fields.get(i).getName().equals(field.getName())) {
+				System.err.println("Object \"" + getName() + "\" already contains field \"" + field.getName() + "\"");
+				System.exit(-1);
+			}
+		}
 		fields.add(field);
 		size += field.getSize();
 		fieldCount = (short) fields.size();
 	}
 
 	public void addString(SSString string) {
+		for(int i = 0; i < strings.size(); i++) {
+			if(strings.get(i).getName().equals(string.getName())) {
+				System.err.println("Object \"" + getName() + "\" already contains string \"" + string.getName() + "\"");
+				System.exit(-1);
+			}
+		}
 		strings.add(string);
 		size += string.getSize();
 		stringCount = (short) strings.size();
 	}
 
 	public void addArray(SSArray array) {
+		for(int i = 0; i < arrays.size(); i++) {
+			if(arrays.get(i).getName().equals(array.getName())) {
+				System.err.println("Object \"" + getName() + "\" already contains array \"" + array.getName() + "\"");
+				System.exit(-1);
+			}
+		}
 		arrays.add(array);
 		size += array.getSize();
 		arrayCount = (short) arrays.size();
+	}
+	
+	public void addObject(SSObject object) {
+		for(int i = 0; i < objects.size(); i++) {
+			if(objects.get(i).getName().equals(object.getName())) {
+				System.err.println("Object \"" + getName() + "\" already contains object \"" + object.getName() + "\"");
+				System.exit(-1);
+			}
+		}
+		objects.add(object);
+		size += object.getSize();
+		objectCount = (short) arrays.size();
 	}
 	
 	public static SSObject Deserialize(byte[] data, int pointer) {

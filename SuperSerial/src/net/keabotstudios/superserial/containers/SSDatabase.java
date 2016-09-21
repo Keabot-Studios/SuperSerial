@@ -1,8 +1,5 @@
 package net.keabotstudios.superserial.containers;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +10,7 @@ import net.keabotstudios.superserial.SSType.SSDataType;
 
 public class SSDatabase extends SSContainer {
 
+	public static final String FILE_EXTENTION = ".ssd";
 	public static final byte[] HEADER = "SSDB".getBytes();
 	public static final short VERSION = 0x0010;
 	private short objectCount;
@@ -89,18 +87,5 @@ public class SSDatabase extends SSContainer {
 			pointer += object.getSize();
 		}
 		return result;
-	}
-	
-	public boolean serializeToFile(String path, ClassLoader loader) {
-		byte[] data = new byte[getSize()];
-		writeBytes(data, 0);
-		try {
-			BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(path));
-			stream.write(data);
-			stream.close();
-			return true;
-		} catch (IOException e) {
-			return false;
-		}
 	}
 }
