@@ -56,14 +56,12 @@ public class SSDatabase extends SSContainer {
 
 	public static SSDatabase Deserialize(byte[] data) {
 		int pointer = 0;
-		SSDatabase result = new SSDatabase();
-		byte[] header = new byte[HEADER.length];
-		SSSerialization.readBytes(data, pointer, header);
-		pointer += HEADER.length;
-		if(!Arrays.equals(header, HEADER)) {
-			System.err.println("[ERROR]Invalid data type!");
+		if(!isValidData(data)) {
+			System.err.println("[ERROR]Invalid data!");
 			return null;
 		}
+		SSDatabase result = new SSDatabase();
+		pointer += HEADER.length;
 		short version = SSSerialization.readShort(data, pointer);
 		pointer += SSDataType.SHORT.getSize();
 		if(version != VERSION) {
@@ -87,5 +85,11 @@ public class SSDatabase extends SSContainer {
 			pointer += object.getSize();
 		}
 		return result;
+	}
+	
+	public static boolean isValidData(byte[] data) {
+		byte[] header = new byte[HEADER.length];
+		SSSerialization.readBytes(data, 0, header);
+		return Arrays.equals(header, HEADER);
 	}
 }
