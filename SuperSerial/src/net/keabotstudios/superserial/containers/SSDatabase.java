@@ -92,4 +92,19 @@ public class SSDatabase extends SSContainer {
 		SSSerialization.readBytes(data, 0, header);
 		return Arrays.equals(header, HEADER);
 	}
+	
+	public String toString() {
+		String out = new String();
+		out += "DATABASE:\n";
+		out += "\tName: " + getName() + "\n";
+		out += "\tSize: " + getSize() + " bytes\n";
+		out += "\n";
+		out += "\tOBJECTS: " + objectCount + "\n";
+		for(SSObject o : objects) {
+			out += "\t\tOBJECT:\n";
+			out += "\t\tName: " + o.getName() + "\n";
+			out += "\t\tSize: " + o.getSize() + " bytes\n";
+		}
+		return out;
+	}
 }
