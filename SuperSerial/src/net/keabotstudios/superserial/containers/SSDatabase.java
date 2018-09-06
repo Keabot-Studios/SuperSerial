@@ -10,7 +10,7 @@ import net.keabotstudios.superserial.SSType.SSDataType;
 
 public class SSDatabase extends SSContainer {
 
-	public static final String FILE_EXTENTION = ".ssd";
+	public static final String FILE_EXTENTION = ".ssdb";
 	public static final byte[] HEADER = "SSDB".getBytes();
 	public static final short VERSION = 0x0010;
 	private short objectCount;
