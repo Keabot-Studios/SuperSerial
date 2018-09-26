@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import net.keabotstudios.superserial.SSException;
 import net.keabotstudios.superserial.SSSerialization;
 import net.keabotstudios.superserial.SSType.SSContainerType;
 import net.keabotstudios.superserial.SSType.SSDataType;
@@ -47,26 +48,23 @@ public class SSDatabase extends SSContainer {
 		objectCount = (short) objects.size();
 	}
 	
-	public SSObject getObject(String name) {
+	public SSObject getObject(String name) throws SSException {
 		for (SSObject object : objects)
 			if(object.getName().equals(name)) return object;
-		System.err.println("Object does not exist: " + name);
-		return null;
+		throw new SSException("Object does not exist: " + name);
 	}
 
-	public static SSDatabase Deserialize(byte[] data) {
+	public static SSDatabase Deserialize(byte[] data) throws SSException {
 		int pointer = 0;
 		if(!isValidData(data)) {
-			System.err.println("[ERROR]Invalid data!");
-			return null;
+			throw new SSException("Invalid data!");
 		}
 		SSDatabase result = new SSDatabase();
 		pointer += HEADER.length;
 		short version = SSSerialization.readShort(data, pointer);
 		pointer += SSDataType.SHORT.getSize();
 		if(version != VERSION) {
-			System.err.println("[ERROR]Invalid SSDatabase version! Read: " + version + ", Expected: " + VERSION);
-			return null;
+			throw new SSException("Invalid SSDatabase version! Read: " + version + ", Expected: " + VERSION);
 		}
 		byte containerType = SSSerialization.readByte(data, pointer);
 		pointer += SSDataType.BYTE.getSize();	

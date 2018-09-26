@@ -3,6 +3,7 @@ package net.keabotstudios.superserial.containers;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.keabotstudios.superserial.SSException;
 import net.keabotstudios.superserial.SSSerialization;
 import net.keabotstudios.superserial.SSType.SSContainerType;
 import net.keabotstudios.superserial.SSType.SSDataType;
@@ -47,29 +48,25 @@ public class SSObject extends SSContainer {
 	public SSField getField(String name) {
 		for (SSField field : fields)
 			if(field.getName().equals(name)) return field;
-		System.err.println("Field does not exist: " + name);
-		return null;
+		throw new SSException("Field does not exist: " + name);
 	}
 	
 	public SSArray getArray(String name) {
 		for (SSArray array : arrays)
 			if(array.getName().equals(name)) return array;
-		System.err.println("Array does not exist: " + name);
-		return null;
+		throw new SSException("Array does not exist: " + name);
 	}
 	
 	public SSString getString(String name) {
 		for (SSString string : strings)
 			if(string.getName().equals(name)) return string;
-		System.err.println("String does not exist: " + name);
-		return null;
+		throw new SSException("String does not exist: " + name);
 	}
 
 	public SSObject getObject(String name) {
 		for (SSObject object : objects)
 			if(object.getName().equals(name)) return object;
-		System.err.println("Object does not exist: " + name);
-		return null;
+		throw new SSException("Object does not exist: " + name);
 	}
 
 	public int writeBytes(byte[] dest, int pointer) {
@@ -95,8 +92,7 @@ public class SSObject extends SSContainer {
 	public void addField(SSField field) {
 		for(int i = 0; i < fields.size(); i++) {
 			if(fields.get(i).getName().equals(field.getName())) {
-				System.err.println("Object \"" + getName() + "\" already contains field \"" + field.getName() + "\"");
-				System.exit(-1);
+				throw new SSException("Object \"" + getName() + "\" already contains field \"" + field.getName() + "\"");
 			}
 		}
 		fields.add(field);
@@ -107,8 +103,7 @@ public class SSObject extends SSContainer {
 	public void addString(SSString string) {
 		for(int i = 0; i < strings.size(); i++) {
 			if(strings.get(i).getName().equals(string.getName())) {
-				System.err.println("Object \"" + getName() + "\" already contains string \"" + string.getName() + "\"");
-				System.exit(-1);
+				throw new SSException("Object \"" + getName() + "\" already contains string \"" + string.getName() + "\"");
 			}
 		}
 		strings.add(string);
@@ -119,8 +114,7 @@ public class SSObject extends SSContainer {
 	public void addArray(SSArray array) {
 		for(int i = 0; i < arrays.size(); i++) {
 			if(arrays.get(i).getName().equals(array.getName())) {
-				System.err.println("Object \"" + getName() + "\" already contains array \"" + array.getName() + "\"");
-				System.exit(-1);
+				throw new SSException("Object \"" + getName() + "\" already contains array \"" + array.getName() + "\"");
 			}
 		}
 		arrays.add(array);
@@ -131,8 +125,7 @@ public class SSObject extends SSContainer {
 	public void addObject(SSObject object) {
 		for(int i = 0; i < objects.size(); i++) {
 			if(objects.get(i).getName().equals(object.getName())) {
-				System.err.println("Object \"" + getName() + "\" already contains object \"" + object.getName() + "\"");
-				System.exit(-1);
+				throw new SSException("Object \"" + getName() + "\" already contains object \"" + object.getName() + "\"");
 			}
 		}
 		objects.add(object);

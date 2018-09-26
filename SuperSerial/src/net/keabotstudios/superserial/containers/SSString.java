@@ -56,4 +56,9 @@ public class SSString extends SSContainer {
 		return result;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getString();
+	}
+	
 }
